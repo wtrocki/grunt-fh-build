@@ -19,8 +19,7 @@ var _ = require('underscore');
 var fs = require('fs');
 var _ld = require('lodash');
 
-
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   'use strict';
 
   require('time-grunt')(grunt);
@@ -32,7 +31,7 @@ module.exports = function(grunt) {
   for (var dependency in dependencies) {
     if (dependency.indexOf('grunt-') === 0) {
       tasksDir = findup(path.join('node_modules', dependency, 'tasks'),
-                        {cwd: basepath});
+        {cwd: basepath});
       if (tasksDir) {
         grunt.loadTasks(tasksDir);
       }
@@ -43,7 +42,7 @@ module.exports = function(grunt) {
    * If grunt config contains an array property called 'fhignore',
    * its elements will be excluded from the tarball.
    */
-  var mergePatterns = function(bundle_deps) {
+  var mergePatterns = function (bundle_deps) {
     var patterns = [
       '**',
       '!dist/**',
@@ -64,21 +63,23 @@ module.exports = function(grunt) {
     ];
     if (bundle_deps) {
       _.map(_.keys(grunt.file.readJSON('package.json').dependencies),
-            function(dep) {
-              patterns.push('node_modules/' + dep + '/**');
-              return dep;
-            });
+        function (dep) {
+          patterns.push('node_modules/' + dep + '/**');
+          return dep;
+        });
     }
 
     var fhignore = grunt.template.process('<%= fhignore %>');
     var extras = [];
     if (typeof fhignore === 'string' && fhignore.length > 0) {
-      extras = fhignore.split(',').map(function(elem) { return '!' + elem; });
+      extras = fhignore.split(',').map(function (elem) {
+        return '!' + elem;
+      });
     }
     Array.prototype.push.apply(patterns, extras);
     var fhinclude = grunt.template.process('<%= fhinclude %>');
     extras = [];
-    if(typeof fhinclude === 'string' && fhinclude.length > 0) {
+    if (typeof fhinclude === 'string' && fhinclude.length > 0) {
       extras = fhinclude.split(',');
     }
     Array.prototype.push.apply(patterns, extras);
@@ -113,8 +114,8 @@ module.exports = function(grunt) {
   grunt.config.merge({
     plato: {
       fh: {
-        options : {
-          jshint : grunt.file.readJSON('.jshintrc')
+        options: {
+          jshint: grunt.file.readJSON('.jshintrc')
         },
         files: {
           'plato': ['lib/**/*.js']
@@ -137,9 +138,9 @@ module.exports = function(grunt) {
         src: 'package.json',
         dest: 'output/<%= fhbuildver %>/package.json',
         options: {
-          process: function(content) {
+          process: function (content) {
             return content.replace(/BUILD\-NUMBER/,
-                                   grunt.template.process('<%= fhbuildnum %>'));
+              grunt.template.process('<%= fhbuildnum %>'));
           }
         }
       }
@@ -171,7 +172,7 @@ module.exports = function(grunt) {
         options: {
           mode: 'tgz',
           archive: 'dist/<%= fhpkg.name %>-<%= fhbuildver %>-<%= fhos %>.'
-            + process.arch + '.tar.gz'
+          + process.arch + '.tar.gz'
         },
         files: [
           { // Everything except exclusions
@@ -238,7 +239,7 @@ module.exports = function(grunt) {
       'get-rpm-dist-tag': {
         command: 'rpm --eval=%dist',
         options: {
-          callback: function(err, stdout, stderr, cb) {
+          callback: function (err, stdout, stderr, cb) {
             if (err || stdout[0] === '%' || stderr !== '') {
               grunt.task.run('shell:fallback-to-non-rpm-based-distro');
               return cb();
@@ -252,10 +253,10 @@ module.exports = function(grunt) {
       'fallback-to-non-rpm-based-distro': {
         command: 'python -c "import platform; print platform.linux_distribution()"',
         options: {
-          callback: function(err, stdout, stderr, cb) {
+          callback: function (err, stdout, stderr, cb) {
             if (err) throw err;
 
-            var dvi = stdout.toLowerCase().split("'").filter(function(v) {
+            var dvi = stdout.toLowerCase().split("'").filter(function (v) {
               return v !== '(' && v !== ', ' && v !== ')';
             });
 
@@ -266,7 +267,7 @@ module.exports = function(grunt) {
       },
 
       'fh-run-array': {
-        command: function(test_type) {
+        command: function (test_type) {
           var cmd = '';
 
           if (test_type) {
@@ -282,11 +283,11 @@ module.exports = function(grunt) {
       },
 
       'fh-report-cov': {
-        command: function() {
+        command: function () {
           var cmd = './node_modules/.bin/istanbul report';
 
           var argsArray = Array.prototype.slice.call(arguments);
-          argsArray.forEach(function(arg) {
+          argsArray.forEach(function (arg) {
             cmd += ' ' + arg;
           });
 
@@ -300,7 +301,7 @@ module.exports = function(grunt) {
   });
 
 
-  var checkPlaceholderFileExists = function() {
+  var checkPlaceholderFileExists = function () {
     var placeholders;
     // check to see if the placeholder file file exists
     // if it does create the openshift config file
@@ -308,18 +309,18 @@ module.exports = function(grunt) {
       placeholders = require(path.resolve('config/ose-placeholders.js'));
       return true;
     }
-    catch(exception) {
+    catch (exception) {
       grunt.log.debug('No placeholder file found for openshift 3 - continuing normally');
       return false;
     }
   };
 
-  grunt.registerTask('fh-generate-dockerised-config','Task to generate openshift config file', function() {
+  grunt.registerTask('fh-generate-dockerised-config', 'Task to generate openshift config file', function () {
     var conf = require(path.resolve('config/dev.json'));
     var placeholders = require(path.resolve('config/ose-placeholders.js'));
 
     grunt.log.debug('Generating openshift 3 config file');
-    _ld.forOwn(placeholders, function(value, key) {
+    _ld.forOwn(placeholders, function (value, key) {
       grunt.log.debug('key', key, 'value', value);
       _ld.set(conf, key, value);
     });
@@ -329,8 +330,7 @@ module.exports = function(grunt) {
   });
 
 
-
-  grunt.registerMultiTask('fh', function() {
+  grunt.registerMultiTask('fh', function () {
 
     if (this.target === 'no-target-specified') {
       grunt.fail.warn('A target must be provided to `grunt fh`');
@@ -358,12 +358,12 @@ module.exports = function(grunt) {
       }
     } else if (this.target === 'make-version-file') {
       grunt.file.write('output/' + grunt.config('fhbuildver') + '/VERSION.txt',
-                       grunt.config('fhbuildver') + '\n');
+        grunt.config('fhbuildver') + '\n');
     } else if (this.target === 'clean') {
       grunt.task.run(['clean:fh-main', 'clean:fh-dist', 'clean:fh-cov']);
     } else if (this.target === 'test') {
       grunt.task.run(['shell:fh-run-array:unit', 'shell:fh-run-array:integrate',
-                      'shell:fh-run-array:accept']);
+        'shell:fh-run-array:accept']);
     } else if (this.target === 'unit') {
       grunt.task.run(['shell:fh-run-array:unit']);
     } else if (this.target === 'integrate') {
@@ -381,7 +381,7 @@ module.exports = function(grunt) {
     } else if (this.target === 'shrinkwrap') {
       grunt.task.run(['shell:fh-run-array:fhshrinkwrap']);
     } else if (this.target === 'default') {
-      grunt.task.run(['jshint', 'fh:coverage', 'fh:analysis', 'fh:dist']);
+      grunt.task.run(['jshint', 'fh:dist']);
     } else {
       grunt.fail.warn('Unknown target provided to `grunt fh`');
     }
